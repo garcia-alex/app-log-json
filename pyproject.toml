@@ -1,0 +1,58 @@
+[project]
+name = "app-log-json"
+version = "0.1.0"
+description = "Typed, non-blocking JSON application logging setup (dictConfig + QueueHandler)."
+readme = "README.md"
+authors = [
+    { name = "Alex Garcia" }
+]
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+keywords = ["logging", "json", "dictConfig"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Operating System :: OS Independent",
+  "Typing :: Typed",
+]
+dependencies = [
+    "typing-extensions",
+]
+
+[project.urls]
+Repository = "https://github.com/garcia-alex/app-log-json"
+
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+## Dependency cooldowns
+[tool.uv]
+exclude-newer = "2026-07-01T00:00:00Z"
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.6.0",
+    "pyright>=1.1.411",
+    "pytest>=9.1.1",
+    "ruff>=0.15.20",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
+
+[tool.pyright]
+include = ["src", "tests"]
+venvPath = "."
+venv = ".venv"
+typeCheckingMode = "basic"
