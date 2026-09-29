@@ -1,6 +1,6 @@
 [project]
 name = "app-log-json"
-version = "0.1.0"
+version = "0.2.0"
 description = "Typed, non-blocking JSON application logging setup (dictConfig + QueueHandler)."
 readme = "README.md"
 authors = [
