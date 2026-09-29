@@ -7,7 +7,7 @@ exclude-newer = "2026-09-14T00:00:00Z"
 
 [[package]]
 name = "app-log-json"
-version = "0.2.0"
+version = "0.3.0"
 source = { editable = "." }
 dependencies = [
     { name = "typing-extensions" },
