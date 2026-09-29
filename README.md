@@ -100,3 +100,20 @@ its console handler:
 make test
 make pre-commit-all
 ```
+
+### Releasing
+
+Bump `version` in `pyproject.toml` and run `uv lock` (the lock records the
+project's own version, so a stale lock breaks every `uv run --frozen`). That
+goes through its own PR — pre-commit blocks committing to `main`.
+
+Once the bump is on `main`:
+
+```bash
+make release
+```
+
+which tags `v<version>`, pushes the tag, publishes to PyPI and cuts the
+GitHub release. `make release-check` runs the preflight guards on their own:
+on `main`, clean tree, in sync with `origin`, tag not already taken, version
+not already on PyPI, and `UV_PUBLISH_TOKEN` set.
