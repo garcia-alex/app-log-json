@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from app_log_json import build_config, get_logger, setup_logging
+from app_log_json.config import find_project_root, resolve_log_dir
 from app_log_json.setup import _install_queue_listener
 
 
@@ -103,3 +104,36 @@ def test_double_init_is_a_noop(tmp_path: Path) -> None:
 
     assert root.handlers[0] is first_handler
     _stop_listener()
+
+
+def test_log_dir_defaults_to_project_root_local_logs(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    (tmp_path / "pyproject.toml").touch()
+    nested = tmp_path / "src" / "pkg"
+    nested.mkdir(parents=True)
+    monkeypatch.chdir(nested)
+    monkeypatch.delenv("LOG_DIR", raising=False)
+
+    assert resolve_log_dir() == tmp_path.resolve() / ".local" / "logs"
+
+
+def test_log_dir_falls_back_to_cwd_without_root_marker(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    assert find_project_root(tmp_path) == tmp_path.resolve()
+
+
+def test_log_dir_env_var_overrides_default(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("LOG_DIR", str(tmp_path / "env-logs"))
+
+    config = build_config("t")
+    handlers = config["handlers"]
+    assert isinstance(handlers, dict)
+    assert handlers["file"]["filename"] == str(tmp_path / "env-logs" / "t.log.jsonl")
+
+
+def test_explicit_log_dir_beats_env_var(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("LOG_DIR", str(tmp_path / "env-logs"))
+    assert resolve_log_dir(tmp_path / "explicit") == tmp_path / "explicit"

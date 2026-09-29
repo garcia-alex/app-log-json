@@ -45,10 +45,25 @@ logger.info("started", extra={"version": "1.2.3"})
 ```
 
 - `setup_logging(None)` — stderr-only, no file handler, filesystem-safe.
-- `setup_logging(build_config(...))` — stderr (text) + rotating JSON file.
+- `setup_logging(build_config(...))` — stderr (text) + rotating JSON file at
+  `<log_dir>/<app_name>.log.jsonl`.
 - `setup_logging(Path("logging.json"))` — load a JSON `dictConfig` file; a
   `"()": "app_log_json.JSONFormatter"` reference resolves because the library
   is importable.
+
+### Log location
+
+`build_config()` picks the log directory in this order:
+
+1. The `log_dir=` argument, if given.
+2. The `LOG_DIR` environment variable, if set (`~` is expanded).
+3. `<project root>/.local/logs/`, where the project root is the nearest
+   ancestor of the current working directory containing `pyproject.toml` or
+   `.git` (falling back to the CWD itself).
+
+So an app run anywhere inside, say, `~/git/project` logs to
+`~/git/project/.local/logs/` by default. Add `.local/` to the app's
+`.gitignore`.
 
 ## Development
 
