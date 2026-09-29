@@ -27,7 +27,12 @@ logger.info("started", extra={"version": "1.2.3"})
 
 ## Install
 
-From a consuming project:
+```bash
+uv add app-log-json
+```
+
+For local development against a sibling checkout instead of the published
+package:
 
 ```bash
 uv add --editable "../app-log-json"
