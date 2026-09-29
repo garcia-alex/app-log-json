@@ -2,6 +2,8 @@ import os
 from pathlib import Path
 
 from app_log_json.formatter import JSONFormatter
+from app_log_json.hive import HiveDailyFileHandler
+from app_log_json.setup import ExcludeCrashReports
 
 LOG_DIR_ENV_VAR = "LOG_DIR"
 PROJECT_ROOT_MARKERS = ("pyproject.toml", ".git")
@@ -32,12 +34,13 @@ def build_config(
     console_level: str = "WARNING",
     file_level: str = "DEBUG",
     root_level: str = "DEBUG",
-    max_bytes: int = 10 * 1024 * 1024,
-    backups: int = 5,
 ) -> dict[str, object]:
     return {
         "version": 1,
         "disable_existing_loggers": False,
+        "filters": {
+            "exclude_crash_reports": {"()": ExcludeCrashReports},
+        },
         "formatters": {
             "detailed": {
                 "format": "[%(levelname)s|%(module)s|L%(lineno)d] %(asctime)s: %(message)s",
@@ -62,15 +65,15 @@ def build_config(
                 "class": "logging.StreamHandler",
                 "level": console_level,
                 "formatter": "detailed",
+                "filters": ["exclude_crash_reports"],
                 "stream": "ext://sys.stderr",
             },
             "file": {
-                "class": "logging.handlers.RotatingFileHandler",
+                "()": HiveDailyFileHandler,
                 "level": file_level,
                 "formatter": "json",
-                "filename": str(resolve_log_dir(log_dir) / f"{app_name}.log.jsonl"),
-                "maxBytes": max_bytes,
-                "backupCount": backups,
+                "base_dir": resolve_log_dir(log_dir),
+                "filename": f"{app_name}.log.jsonl",
             },
         },
         "loggers": {
