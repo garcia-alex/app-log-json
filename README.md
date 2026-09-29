@@ -50,11 +50,15 @@ logger.info("started", extra={"version": "1.2.3"})
 ```
 
 - `setup_logging(None)` — stderr-only, no file handler, filesystem-safe.
-- `setup_logging(build_config(...))` — stderr (text) + rotating JSON file at
-  `<log_dir>/<app_name>.log.jsonl`.
+- `setup_logging(build_config(...))` — stderr (text) + a Hive-partitioned
+  JSON Lines file at
+  `<log_dir>/year=YYYY/month=MM/day=DD/<app_name>.log.jsonl`, one file per
+  UTC day.
 - `setup_logging(Path("logging.json"))` — load a JSON `dictConfig` file; a
-  `"()": "app_log_json.JSONFormatter"` reference resolves because the library
-  is importable.
+  `"()": "app_log_json.JSONFormatter"` or
+  `"()": "app_log_json.HiveDailyFileHandler"` reference resolves because the
+  library is importable. The handler takes `base_dir` (a path string is fine)
+  and `filename`.
 
 ### Log location
 
@@ -69,6 +73,26 @@ logger.info("started", extra={"version": "1.2.3"})
 So an app run anywhere inside, say, `~/git/project` logs to
 `~/git/project/.local/logs/` by default. Add `.local/` to the app's
 `.gitignore`.
+
+### Unhandled exceptions
+
+`setup_logging()` installs a `sys.excepthook` that logs any exception which
+escapes the program as `CRITICAL` (via the `root` logger, so it goes through
+the same JSON file handler) before calling through to the previous hook.
+`KeyboardInterrupt` is left alone. This only covers exceptions that would
+otherwise crash the main thread — wrap background threads in their own
+`try`/`except` and call `logger.exception(...)` explicitly.
+
+The terminal still shows exactly the traceback an unmodified Python program
+would print, and nothing extra: the crash record carries a marker that the
+console handler filters out, so the traceback isn't printed twice. A
+hand-written config that wants the same behaviour should add the filter to
+its console handler:
+
+```json
+"filters": {"exclude_crash_reports": {"()": "app_log_json.ExcludeCrashReports"}},
+"handlers": {"stderr": {"filters": ["exclude_crash_reports"], "…": "…"}}
+```
 
 ## Development
 

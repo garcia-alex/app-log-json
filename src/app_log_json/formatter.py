@@ -65,7 +65,8 @@ class JSONFormatter(logging.Formatter):
         message.update(always_fields)
 
         for key, val in record.__dict__.items():
-            if key not in LOG_RECORD_BUILTIN_ATTRS:
+            # Leading underscore marks an attribute internal to this library.
+            if key not in LOG_RECORD_BUILTIN_ATTRS and not key.startswith("_"):
                 message[key] = val
 
         return message
