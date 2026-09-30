@@ -1,7 +1,10 @@
+from app_log_json.config import DEFAULT_RETENTION_DAYS as DEFAULT_RETENTION_DAYS
 from app_log_json.config import build_config as build_config
 from app_log_json.formatter import LOG_RECORD_BUILTIN_ATTRS as LOG_RECORD_BUILTIN_ATTRS
 from app_log_json.formatter import JSONFormatter as JSONFormatter
 from app_log_json.hive import HiveDailyFileHandler as HiveDailyFileHandler
+from app_log_json.hive import iter_day_partitions as iter_day_partitions
+from app_log_json.hive import prune_partitions as prune_partitions
 from app_log_json.setup import ExcludeCrashReports as ExcludeCrashReports
 from app_log_json.setup import get_logger as get_logger
 from app_log_json.setup import setup_logging as setup_logging

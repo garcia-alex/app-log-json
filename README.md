@@ -57,8 +57,8 @@ logger.info("started", extra={"version": "1.2.3"})
 - `setup_logging(Path("logging.json"))` — load a JSON `dictConfig` file; a
   `"()": "app_log_json.JSONFormatter"` or
   `"()": "app_log_json.HiveDailyFileHandler"` reference resolves because the
-  library is importable. The handler takes `base_dir` (a path string is fine)
-  and `filename`.
+  library is importable. The handler takes `base_dir` (a path string is fine),
+  `filename` and an optional `retention_days`.
 
 ### Log location
 
@@ -73,6 +73,36 @@ logger.info("started", extra={"version": "1.2.3"})
 So an app run anywhere inside, say, `~/git/project` logs to
 `~/git/project/.local/logs/` by default. Add `.local/` to the app's
 `.gitignore`.
+
+### Retention
+
+Daily partitioning has no size cap, so `build_config()` sets
+`retention_days=30`: a day's partition is deleted once it is more than 30 days
+old. Pass a different number, or `retention_days=None` to keep everything.
+
+```python
+setup_logging(build_config("my_app", retention_days=7))
+```
+
+Pruning is driven by the partition path, not by `mtime`, so a log tree that
+was copied or rsync'd still expires by the day each record was written. It
+runs whenever the handler opens a file — the first write of a process and each
+crossing of UTC midnight — so a short cron run prunes at startup and a
+long-lived daemon prunes as it rolls over. A prune that fails never costs a
+log line.
+
+Only `<app_name>.log.jsonl` is removed from an expired partition, because a
+shared `LOG_DIR` holds other apps' files (with their own retention) beside it;
+the `day=`/`month=`/`year=` directories go only once that emptied them.
+Directories that don't parse as a partition are never touched.
+
+To prune a tree without logging to it — from a cleanup job, say:
+
+```python
+from app_log_json import prune_partitions
+
+prune_partitions("/var/log/my_app", "my_app.log.jsonl", keep_days=30)
+```
 
 ### Unhandled exceptions
 
