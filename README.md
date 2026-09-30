@@ -103,17 +103,25 @@ make pre-commit-all
 
 ### Releasing
 
-Bump `version` in `pyproject.toml` and run `uv lock` (the lock records the
-project's own version, so a stale lock breaks every `uv run --frozen`). That
-goes through its own PR — pre-commit blocks committing to `main`.
-
-Once the bump is on `main`:
-
 ```bash
-make release
+make release-check   # preflight guards only — safe to run any time
+make build           # rm -rf dist, then uv build
+make release         # guards, test, build, tag, push, publish, GitHub release
 ```
 
-which tags `v<version>`, pushes the tag, publishes to PyPI and cuts the
-GitHub release. `make release-check` runs the preflight guards on their own:
-on `main`, clean tree, in sync with `origin`, tag not already taken, version
-not already on PyPI, and `UV_PUBLISH_TOKEN` set.
+**First**, bump `version` in `pyproject.toml` and run `uv lock`, then land it
+via its own PR — pre-commit blocks committing to `main`. The lock records the
+project's own version, so bumping `pyproject.toml` alone leaves it stale and
+every `uv run --frozen` refuses to start.
+
+**Then**, with the bump on `main`, `make release` tags `v<version>`, pushes
+the tag, publishes to PyPI and cuts the GitHub release. It publishes before
+creating the release, so the release only appears once the artifact is live.
+
+`make release-check` holds the guards, and refuses to proceed unless: on
+`main`, clean tree, in sync with `origin`, the tag is free both locally and on
+origin, the version is absent from PyPI (it can never be re-uploaded), and
+`UV_PUBLISH_TOKEN` is set. Run it alone to check readiness without releasing.
+
+`make build` always clears `dist/` first, because `uv publish` uploads every
+file in that directory — a leftover artifact would otherwise ship too.
