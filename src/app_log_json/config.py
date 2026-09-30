@@ -7,6 +7,7 @@ from app_log_json.setup import ExcludeCrashReports
 
 LOG_DIR_ENV_VAR = "LOG_DIR"
 PROJECT_ROOT_MARKERS = ("pyproject.toml", ".git")
+DEFAULT_RETENTION_DAYS = 30
 
 
 def find_project_root(start: Path | None = None) -> Path:
@@ -34,6 +35,7 @@ def build_config(
     console_level: str = "WARNING",
     file_level: str = "DEBUG",
     root_level: str = "DEBUG",
+    retention_days: int | None = DEFAULT_RETENTION_DAYS,
 ) -> dict[str, object]:
     return {
         "version": 1,
@@ -74,6 +76,7 @@ def build_config(
                 "formatter": "json",
                 "base_dir": resolve_log_dir(log_dir),
                 "filename": f"{app_name}.log.jsonl",
+                "retention_days": retention_days,
             },
         },
         "loggers": {
