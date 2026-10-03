@@ -1,0 +1,15 @@
+# Runs in the new worktree before `wt switch --create` hands it over.
+# [[pre-start]] steps run in order; a failing step aborts the rest.
+
+# Share the primary checkout's .env (gitignored, so absent in a worktree).
+# Never overwrites an existing .env, so re-running in the primary is safe.
+[[pre-start]]
+env = "[ -e .env ] || ln -s {{ primary_worktree_path }}/.env .env"
+
+# VIRTUAL_ENV leaks in from the primary's direnv; uv warns on the mismatch.
+[[pre-start]]
+venv = "env -u VIRTUAL_ENV make sync"
+
+# direnv approves .envrc per path, so every new worktree needs this.
+[[pre-start]]
+direnv = "direnv allow . 2>/dev/null || echo 'direnv unavailable: run direnv allow'"

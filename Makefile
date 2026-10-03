@@ -1,7 +1,18 @@
-.PHONY: pre-commit pre-commit-all test build release-check release
+.PHONY: sync upgrade pre-commit pre-commit-all test build release-check release
 
 NAME := $(shell grep -m1 '^name' pyproject.toml | cut -d'"' -f2)
 VERSION := $(shell grep -m1 '^version' pyproject.toml | cut -d'"' -f2)
+
+# Creates .venv if missing (same prompt + macOS flag fix as the scaffold),
+# then installs the locked deps. Idempotent; the wt pre-start hook runs it.
+sync:
+	uv venv --allow-existing --prompt venv-$(NAME)
+	@[ "$$(uname)" != Darwin ] || chflags nohidden .venv
+	uv sync --frozen
+
+upgrade:
+	uv lock --upgrade
+	uv sync --frozen
 
 pre-commit:
 	@git symbolic-ref -q refs/remotes/origin/HEAD >/dev/null || git remote set-head origin -a
